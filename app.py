@@ -29,14 +29,6 @@ def query(sql):
     """Background task to send sql query"""
     return rs.query(sql)
 
-@app.route('/query', methods=['POST'])
-def async_query():
-
-    data = request.data
-    sql = 'select 1'
-    task = asyncquery.apply_async(args=[sql])
-    return jsonify({}), 202, {'Location': 'None'}
-
 @celery.task(bind=True)
 def asyncquery(self, sql):
 
