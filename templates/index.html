@@ -16,12 +16,15 @@
     <h2>Query Editor</h2>
     <form method="POST">
         <textarea id="sql" name="sql" rows="10" cols="50"></textarea>
-    <br><input type="submit" name="submit" value="Run">
+    <br><input type="submit" name="submit" value="Run Submit SQL">
     </form>
 
 
 <!-- Demo for a job submission that polls for results -->
 
+    <button id="async-sql">Run AJAX SQL</button><br><br>
+    <hr>
+    <h2>Demo For Tracking Status.</h2>
     <button id="start-bg-job">Start Long Calculation</button><br><br>
     <div id="progress"></div>
 
@@ -30,12 +33,12 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script>
         function query() {
+            sql = $('#sql').val() //value I want to send
             // send ajax POST request to start background job
             $.ajax({
                 type: 'POST',
                 url: '/query',
-                dataType: 'text',
-                data: {text: "SELECT 1"},
+                data: sql,
                 success: function(data, status, request) {
                     status_url = request.getResponseHeader('Location');
                 },
@@ -45,22 +48,10 @@
             });
         }
         $(function() {
-            $('#async-job').click(query);
+            $('#async-sql').click(query);
         });
     </script>
-    <script>
-        $("#delete_student").click(function(){
-            $.ajax({
-              type: 'POST',
-              url: "/query",
-              data: {student_id: 1},
-              dataType: "text",
-              success: function(data){
-                         alert("Deleted Student ID "+ student_id.toString());
-                       }
-            });
-        });
-    </script>
+
     <script>
         function start_long_task() {
             // add task status elements

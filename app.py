@@ -1,6 +1,7 @@
 import os
 import random
 import time
+import json
 from flask import Flask, request, render_template, session, flash, redirect, \
     url_for, jsonify
 from celery import Celery
@@ -24,15 +25,29 @@ celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 
-# @celery.task(bind=True)
-def query(sql):
+@app.route('/query', methods=['POST'])
+def query():
     """Background task to send sql query"""
-    return rs.query(sql)
+
+    sql = request.get_data()
+    task = asyncquery.apply_async(args=[sql])
+    flash(f'Submitted query. Task ID {task.id}, {task.kwargs}, SQL: {sql}')
+    
+    # Ideally this would return the task id so that we can poll for the status. See
+    # taskstatus method for an example of how this could be done.
+    return jsonify({}), 202, {'Location': url_for('taskstatus',
+                                                  task_id=task.id)}
+
 
 @celery.task(bind=True)
 def asyncquery(self, sql):
+    """ Run the celery task for a query """
 
-    return rs.query(sql)
+    # Ideally, this would return a json object. There are issues with Celery
+    # in that returned objects need to be JSON serializable.
+    json_path = rs.query(sql).to_json()
+    return json_path
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -40,6 +55,8 @@ def index():
     if request.method == 'GET':
         return render_template('index.html', email=session.get('email', ''))
 
+    # This method submits a query via a form which is probably not what we want 
+    # to be doing.
     if request.form['submit'] == 'Run':
         sql = request.form['sql']
         task = asyncquery.delay(sql)
@@ -47,6 +64,7 @@ def index():
 
     return redirect(url_for('index'))
 
+# This code was provided as part of the initial demo.
 
 @app.route('/longtask', methods=['POST'])
 def longtask():
