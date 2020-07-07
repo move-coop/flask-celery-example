@@ -30,6 +30,7 @@ def query():
     """Background task to send sql query"""
 
     sql = request.get_data()
+    # TO DO: Inject a limit if it is not there.
     task = asyncquery.apply_async(args=[sql])
     flash(f'Submitted query. Task ID {task.id}, {task.kwargs}, SQL: {sql}')
     
@@ -43,11 +44,14 @@ def query():
 def asyncquery(self, sql):
     """ Run the celery task for a query """
 
-    # Ideally, this would return a json object. There are issues with Celery
-    # in that returned objects need to be JSON serializable.
-    json_path = rs.query(sql).to_json()
-    return json_path
+    # The response is returned as a json in a hacky way with Parsons in that
+    # it writes it to a file and then reads it.
 
+    try:
+        tbl = rs.query(sql)
+        return open(tbl.to_json()).read()
+    except Exception as e:
+        return str(e)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
