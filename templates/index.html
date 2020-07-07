@@ -9,24 +9,58 @@
     </style>
   </head>
   <body>
-    <h1>Flask + Celery Examples</h1>
-    <h2>Example 1: Send Asynchronous Email</h2>
     {% for message in get_flashed_messages() %}
     <p style="color: red;">{{ message }}</p>
     {% endfor %}
+    <h1>SQL Client</h1>
+    <h2>Query Editor</h2>
     <form method="POST">
-      <p>Send test email to: <input type="text" name="email" value="{{ email }}"></p>
-      <input type="submit" name="submit" value="Send">
-      <input type="submit" name="submit" value="Send in 1 minute">
+        <textarea id="sql" name="sql" rows="10" cols="50"></textarea>
+    <br><input type="submit" name="submit" value="Run">
     </form>
-    <hr>
-    <h2>Example 2: Long running task with progress updates</h2>
-    <!--<button onclick="start_long_task();">Start Long Calculation</button><br><br>-->
+
+
+<!-- Demo for a job submission that polls for results -->
+
     <button id="start-bg-job">Start Long Calculation</button><br><br>
     <div id="progress"></div>
 
+
     <script src="//cdnjs.cloudflare.com/ajax/libs/nanobar/0.2.1/nanobar.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script>
+        function query() {
+            // send ajax POST request to start background job
+            $.ajax({
+                type: 'POST',
+                url: '/query',
+                dataType: 'text',
+                data: {text: "SELECT 1"},
+                success: function(data, status, request) {
+                    status_url = request.getResponseHeader('Location');
+                },
+                error: function() {
+                    alert('Unexpected error');
+                }
+            });
+        }
+        $(function() {
+            $('#async-job').click(query);
+        });
+    </script>
+    <script>
+        $("#delete_student").click(function(){
+            $.ajax({
+              type: 'POST',
+              url: "/query",
+              data: {student_id: 1},
+              dataType: "text",
+              success: function(data){
+                         alert("Deleted Student ID "+ student_id.toString());
+                       }
+            });
+        });
+    </script>
     <script>
         function start_long_task() {
             // add task status elements
